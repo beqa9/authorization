@@ -35,11 +35,26 @@ public class JwtServiceImpl implements JwtService {
 
     @Override
     public String generateAccessToken(User user) {
+
+        var roles = user.getRoles()
+                .stream()
+                .map(r -> r.getName())
+                .toList();
+
+        var authorities = user.getRoles()
+                .stream()
+                .flatMap(r -> r.getAuthorities().stream())
+                .map(a -> a.getName())
+                .distinct()
+                .toList();
+
         return Jwts.builder()
                 .setSubject(user.getUsername())
+                .claim("roles", roles)
+                .claim("authorities", authorities)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + accessExpiration))
-                .signWith(key)
+                .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
 
@@ -49,7 +64,7 @@ public class JwtServiceImpl implements JwtService {
                 .setSubject(user.getUsername())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + refreshExpiration))
-                .signWith(key)
+                .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
 
@@ -87,9 +102,11 @@ public class JwtServiceImpl implements JwtService {
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
+
             return claims.getSubject();
         } catch (JwtException e) {
             return null;
         }
     }
+
 }
