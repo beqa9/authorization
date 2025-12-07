@@ -34,10 +34,19 @@ public class UserServiceImpl implements UserService {
         if (userRepo.findByUsername(dto.username()).isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "username exists");
         }
+
+        var defaultRole = roleRepo.findByName("ROLE_USER")
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Default role ROLE_USER not found in database"));
+
         User u = new User();
         u.setUsername(dto.username());
         u.setPassword(encoder.encode(dto.password()));
         u.setEmployeeId(dto.employeeId());
+
+        u.setRoles(new java.util.HashSet<>());
+        u.getRoles().add(defaultRole);
+
         userRepo.save(u);
         return userMapper.toDto(u);
     }
