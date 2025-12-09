@@ -28,26 +28,36 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepo;
     private final RefreshTokenRepository refreshRepo;
     private final PasswordEncoder passwordEncoder;
+    private final UserSessionService userSessionService;
 
     public AuthServiceImpl(AuthenticationManager authManager,
                            JwtService jwtService,
                            UserRepository userRepo,
                            RefreshTokenRepository refreshRepo,
-                           PasswordEncoder passwordEncoder) {
+                           PasswordEncoder passwordEncoder,UserSessionService userSessionService) {
         this.authManager = authManager;
         this.jwtService = jwtService;
         this.userRepo = userRepo;
         this.refreshRepo = refreshRepo;
         this.passwordEncoder = passwordEncoder;
+        this.userSessionService = userSessionService;
     }
 
     @Override
-    public LoginResponse login(LoginRequest request) {
+    public LoginResponse login(LoginRequest request, String ip, String userAgent) {
         var authToken = new UsernamePasswordAuthenticationToken(request.username(), request.password());
         var auth = authManager.authenticate(authToken);
-        var user = userRepo.findDetailedByUsername(request.username()).orElseThrow();
+
+        var user = userRepo.findDetailedByUsername(request.username())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Generate tokens
         String access = jwtService.generateAccessToken(user);
         String refresh = createAndStoreRefreshToken(user);
+
+        // Save session
+        userSessionService.createSession(user.getId(), ip, userAgent);
+
         return new LoginResponse(access, refresh, "Bearer");
     }
 
@@ -87,7 +97,18 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void logout(String refreshToken) {
-        refreshRepo.findByToken(refreshToken).ifPresent(refreshRepo::delete);
+    public void logout(String refreshToken, String ip, String userAgent) {
+        refreshRepo.findByToken(refreshToken).ifPresent(rt -> {
+            // Revoke the latest session for this user from this IP/UA
+            userSessionService.getActiveSessions(rt.getUser().getId())
+                    .stream()
+                    .filter(s -> !s.revoked() &&
+                            (ip == null || s.ip().equals(ip)) &&
+                            (userAgent == null || s.userAgent().equals(userAgent)))
+                    .forEach(s -> userSessionService.revokeSession(s.id()));
+
+            // Delete refresh token
+            refreshRepo.delete(rt);
+        });
     }
 }

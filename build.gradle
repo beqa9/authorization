@@ -50,6 +50,9 @@ dependencies {
     // --- Other ---
     implementation 'com.fasterxml.jackson.core:jackson-databind'
 
+    //---minio---
+    implementation 'io.minio:minio:8.5.17'
+
     // --- Tomcat since using WAR ---
     providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
 

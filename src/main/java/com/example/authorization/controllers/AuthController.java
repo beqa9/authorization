@@ -7,6 +7,7 @@ import com.example.authorization.models.AuthDtos.RegisterRequest;
 import com.example.authorization.models.UserDto;
 import com.example.authorization.services.AuthService;
 import com.example.authorization.services.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -26,8 +27,14 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest req) {
-        var resp = authService.login(req);
+    public ResponseEntity<LoginResponse> login(
+            @RequestBody LoginRequest req,
+            HttpServletRequest httpReq) {
+
+        String ip = httpReq.getRemoteAddr();
+        String userAgent = httpReq.getHeader("User-Agent");
+
+        var resp = authService.login(req, ip, userAgent);
         return ResponseEntity.ok(resp);
     }
 
@@ -51,8 +58,14 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(@RequestBody RefreshRequest req) {
-        authService.logout(req.refreshToken());
+    public ResponseEntity<?> logout(
+            @RequestBody RefreshRequest req,
+            HttpServletRequest httpReq) {
+
+        String ip = httpReq.getRemoteAddr();
+        String userAgent = httpReq.getHeader("User-Agent");
+
+        authService.logout(req.refreshToken(), ip, userAgent);
         return ResponseEntity.ok().build();
     }
 }

@@ -6,8 +6,8 @@ import com.example.authorization.models.AuthDtos.RefreshRequest;
 import com.example.authorization.models.AuthDtos.RegisterRequest;
 
 public interface AuthService {
-    LoginResponse login(LoginRequest request);
+    LoginResponse login(LoginRequest request, String ip, String userAgent);
     LoginResponse refreshToken(RefreshRequest request);
     void register(RegisterRequest request);
-    void logout(String refreshToken);
+    void logout(String refreshToken, String ip, String userAgent);
 }
