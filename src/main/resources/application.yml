@@ -3,3 +3,14 @@ minio:
   access-key: ${MINIO_ACCESS_KEY:minioadmin}
   secret-key: ${MINIO_SECRET_KEY:minioadmin}
   bucket: ${MINIO_BUCKET:user-logs}
+
+
+spring:
+  mail:
+    host: localhost
+    port: 1025
+    username: ""
+    password: ""
+    properties:
+      mail.smtp.auth: false
+      mail.smtp.starttls.enable: false

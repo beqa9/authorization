@@ -53,6 +53,9 @@ dependencies {
     //---minio---
     implementation 'io.minio:minio:8.5.17'
 
+    //---mailhog---
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+
     // --- Tomcat since using WAR ---
     providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
 
